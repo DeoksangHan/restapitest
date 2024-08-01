@@ -1,0 +1,71 @@
+spring: 
+  name: restapitest
+ 
+  profiles:
+    default: dev-h2 #dev-h2 #dev-mysql #dev-mysql-k8s
+
+    
+  jpa:
+    hibernate:
+      ddl-auto: create # update # create-drop # 애플리케이션을 시작할때 데이터베이스를 초기화하고 다시 테이블 생성    
+      # 엔티티로 등록된 클래스와 매핑되는 테이블을 자동으로 생성(create)해준다.기존에 해당 클래스와 매핑되는 테이블이 존재한다면 기존 테이블을 삭제(drop)하고 테이블을 생성한다.
+      
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        # @Table에서 지정한 설정대로 테이블며이 하이버네이트 쿼리가 형성 되도록 한다.
+      
+    show-sql: true  #jpa가 수행하는 쿼리 출력
+    properties:
+      hibernate:
+        format_sql: true # 실행되는 쿼리를 보여줌, 쿼리출력 가독성 향상, 한줄이 아니라 여러줄로 출력
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+    # Spring Boot 2.5버전 이후부터 script 파일 (data.sql)이 hibernate 초기화 이후 동작하게 하기 위한 옵션
+    #실행 순서 : ddl-auto=create -> schema.sql -> data.sql ->   
+    defer-datasource-initialization: true
+    # 배포시에는 ddl-auto: none, sql.init.mode : never 로 설정하여 운영DB를 건들이지 말아야 한다 
+    
+  mybatis:    
+    config-location: classpath:mybatis-config.xml
+    mapper-locations: classpath:/mapper/**/*.xml
+
+    
+    #### mybatis-config.xml 에서 지정함..
+    #xml 파일의 parameter type, result type에 패키지명 생략 가능하도록 alias 설정
+    #type-aliases-package: com.hds.restapitest.dto
+    #configuration:
+      # Map 인경우는 안먹힌다.. guava 를 이용해서 변환해야 한다 
+    # map-underscore-to-camel-case: true
+      # 캐시 사용 여부 설정 
+    # cache-enabled: false
+    
+
+  sql:
+    init:
+      mode: always
+      # 모든 데이터베이스에 sql script를 동작시키는 'always', 
+      # embedded(내장) 데이터베이스만 sql 스크립트를 동작시키는 'embedded', 
+      # 모든 데이터베이스에 sql script를 동작시키지 않는 'never'
+
+logging:
+  level:
+    
+    com.hds.restapitest.mapper: debug    # 각자의 패키지명을 적어주세요
+    
+    # log4jdbc 관련 로그 레벨 설정
+    jdbc.sqltiming: info 
+
+    jdbc.sqlonly: off #error 
+    jdbc.audit: off #error 
+    jdbc.resultset: off #error 
+    jdbc.resultsettable: off #error 
+    jdbc.connection: off #error 
+
+
+    com.zaxxer.hikari.HikariDataSource: off #ERROR  
+    org.springframework.web: off #ERROR
+
+jwt:
+  issuer: dshan@jinjin.com
+  secret_key: study-springboot
+

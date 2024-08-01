@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  labels:
+    app: mysql
+data:
+  master.cnf: |
+    [mysqld]
+    log-bin
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    default-time-zone=Asia/Seoul
+  slave.cnf: |
+    [mysqld]
+    super-read-only
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    default-time-zone=Asia/Seoul
+  initdb.sql: |
+    grant all privileges on *.* to testuser@localhost identified by 'testuser@123';
+    grant all privileges on *.* to testuser@'127.0.0.1' identified by 'testuser@123';
+    CREATE DATABASE IF NOT EXISTS msa;
+    USE msa;
+    

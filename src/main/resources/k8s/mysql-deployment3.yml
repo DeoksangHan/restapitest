@@ -1,0 +1,119 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS msa default CHARACTER SET UTF8;
+    USE msa;
+    CREATE TABLE friends (id INT, name VARCHAR(256), age INT, gender VARCHAR(3));
+    INSERT INTO friends VALUES (1, 'Abhijeet', 32, 'm');
+    INSERT INTO friends VALUES (2, 'Anjali', 29, 'f');
+    INSERT INTO friends VALUES (3, 'Aayush', 27, 'm');
+    CREATE TABLE TB_BOARD (
+      board_seq int(11) NOT NULL AUTO_INCREMENT,
+      board_title varchar(50) COLLATE utf8_unicode_ci NOT NULL,
+      board_text mediumtext COLLATE utf8_unicode_ci,
+      write_user_id varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+      write_user_name varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+      use_yn varchar(1) COLLATE utf8_unicode_ci DEFAULT 'Y',
+      create_dt datetime NOT NULL,
+      update_dt datetime NOT NULL,
+      PRIMARY KEY (`board_seq`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci
+    ;
+    INSERT INTO `TB_BOARD`
+    (board_seq, board_title, board_text, write_user_id, write_user_name, use_yn, create_dt, update_dt)
+    VALUES(1, '게시판 제목_테스트', '게시판 내용_테스트', 'test', '홍길동', 'Y', '2021-09-27 16:26:12.000', '2021-09-27 16:26:12.000');
+    INSERT INTO `TB_BOARD`
+    (board_seq, board_title, board_text, write_user_id, write_user_name, use_yn, create_dt, update_dt)
+    VALUES(2, '게시판 제목_테스트', '게시판 내용_테스트', 'test', '홍길동', 'Y', '2021-09-27 16:26:12.000', '2021-09-27 16:26:12.000');
+
+
+# Define a 'Service' To Expose mysql to Other Services
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql  # DNS name 
+  labels:
+    app: mysql
+    tier: database
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:       # mysql Pod Should contain same labels
+    app: mysql
+    tier: database
+  clusterIP: None  # We Use DNS, Thus ClusterIP is not relevant
+      
+---
+# Configure 'Deployment' of mysql server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+    tier: database
+spec:
+  selector: # mysql Pod Should contain same labels 
+    matchLabels:
+      app: mysql
+      tier: database
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels: # Must match 'Service' and 'Deployment' selectors
+        app: mysql
+        tier: database
+    spec:
+      containers:
+      - image: mysql:5.7 # image from docker-hub
+        args:
+          - "--ignore-db-dir=lost+found" # Workaround for https://github.com/docker-library/mysql/issues/186
+          - "--character-set-server=utf8mb4" 
+          - "--collation-server=utf8mb4_unicode_ci" 
+          - "--skip-character-set-client-handshake" 
+        #args: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+
+        name: mysql 
+        env:
+        - name: MYSQL_ROOT_PASSWORD # Setting Root Password of mysql From a 'Secret'
+          valueFrom:
+            secretKeyRef:
+              name: db-root-credentials # Name of the 'Secret'
+              key: password   # 'key' inside the Secret which contains required 'value'
+        - name: MYSQL_USER # Setting USER username on mysql From a 'Secret'
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: username
+        - name: MYSQL_PASSWORD # Setting USER Password on mysql From a 'Secret'
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        - name: MYSQL_DATABASE # Setting Database Name from a 'ConfigMap'
+          valueFrom:
+            configMapKeyRef:
+              name: db-conf
+              key: name
+        
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:        # Mounting voulume obtained from Persistent Volume Claim
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d          
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql #This is the path in the container on which the mounting will take place.
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config      
+      - name: mysql-persistent-storage # Obtaining 'vloume' from PVC
+        emptyDir: {}

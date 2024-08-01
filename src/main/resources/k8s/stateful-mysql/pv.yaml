@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-pv0
+  labels:
+    app: mysql
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /home/ubuntu/test0
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    namespace: default
+    name: test-mysql-sts-0
+ 

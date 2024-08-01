@@ -1,0 +1,69 @@
+server:
+ port: 8081
+
+spring: 
+  name: restapitest
+ 
+  config:
+    activate:
+      on-profile: dev-mysql # 환경이름설정
+
+  datasource:
+    
+    # mysql
+    ################
+    #driver-class-name: com.mysql.cj.jdbc.Driver
+    #jdbc-url: jdbc:mysql://localhost:3307/msa?characterEncoding=utf8
+              #jdbc:mysql://localhost:3306/?autoReconnect=true&useSSL=false&amp&serverTimezone=UTC
+              #jdbc:mysql://localhost:3306/mybatis_test?useUnicode=yes&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Seoul
+    #username: root
+    #password: password    
+    
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    #jdbc-url: jdbc:log4jdbc:mysql://localhost:3307/msa?characterEncoding=utf8
+    #jdbc-url: jdbc:log4jdbc:mysql://api-edu-mysql:3308/msa?characterEncoding=utf8
+    
+    jdbc-url: jdbc:log4jdbc:mysql://localhost:3307/msa?characterEncoding=utf8
+    username: root
+    password: password    
+    
+    #jdbc-url: jdbc:log4jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3308}/${MYSQL_DB_NAME:msa}?characterEncoding=utf8
+    #username: ${MYSQL_USERNAME:root}
+    #password: ${MYSQL_ROOT_PASSWORD:password}    
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # create # update # create-drop # 애플리케이션을 시작할때 데이터베이스를 초기화하고 다시 테이블 생성    
+      # 엔티티로 등록된 클래스와 매핑되는 테이블을 자동으로 생성(create)해준다.기존에 해당 클래스와 매핑되는 테이블이 존재한다면 기존 테이블을 삭제(drop)하고 테이블을 생성한다.
+      
+    show-sql: true  #jpa가 수행하는 쿼리 출력
+    properties:
+      hibernate:
+        format_sql: true # 실행되는 쿼리를 보여줌, 쿼리출력 가독성 향상, 한줄이 아니라 여러줄로 출력
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  sql:
+    init:
+      mode: always
+      # 모든 데이터베이스에 sql script를 동작시키는 'always', 
+      # embedded(내장) 데이터베이스만 sql 스크립트를 동작시키는 'embedded', 
+      # 모든 데이터베이스에 sql script를 동작시키지 않는 'never'
+
+logging:
+  level:
+    
+    com.hds.restapitest.mapper: debug    # 각자의 패키지명을 적어주세요
+    
+    # log4jdbc 관련 로그 레벨 설정
+    jdbc.sqltiming: info 
+
+    jdbc.sqlonly: off #error 
+    jdbc.audit: off #error 
+    jdbc.resultset: off #error 
+    jdbc.resultsettable: off #error 
+    jdbc.connection: off #error 
+
+
+    com.zaxxer.hikari.HikariDataSource: off #ERROR  
+    org.springframework.web: off #ERROR
+

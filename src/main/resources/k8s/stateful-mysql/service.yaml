@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+  labels:
+    app: mysql
+spec:
+  selector:
+    app: mysql
+  clusterIP: None
+  ports:
+    - port: 3306
+      name: mysql
+    - port: 3307
+      name: xtrabackup
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-np-svc
+  labels:
+    app: mysql
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: mysql-sts-0
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      nodePort: 30306
+      name: mysql
+ 
